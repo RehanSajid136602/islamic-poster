@@ -1,0 +1,35 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+
+# WhatsApp session data (sensitive)
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Logs
+logs/*.log
+logs/*.log.*
+
+# Temp generated files
+temp_poster_*.jpg
+temp_poster_*.mp4
+
+# OS
+.DS_Store
+Thumbs.db
+temp_poster_*.png
+test_output.png
+test_vertical.jpg
+test_hadith.js
+test_fetch.js
+test_ip.js
+test_https.js
+test_curl_fetch.js
+test_image_status.js
+
