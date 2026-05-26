@@ -5,7 +5,7 @@ import type { PosterData } from '@/lib/types';
 // ── Background gradients per theme ────────────────────────────
 const BG_GRADIENTS: Record<string, { gradient: string; solid: string; image?: string; overlayColor?: string }> = {
   green : { gradient: 'linear-gradient(160deg, #1a4a2e 0%, #0d2e1b 60%, #0a2015 100%)', solid: '#0d1f13' },
-  navy  : { gradient: 'linear-gradient(160deg, #1a2a4a 0%, #0a1828 60%, #0a1020 100%)', solid: '#0a1020' },
+  navy  : { gradient: 'linear-gradient(160deg, #11306b 0%, #091a3c 60%, #040c1e 100%)', solid: '#040c1e' },
   black : { gradient: 'linear-gradient(160deg, #1e1e1e 0%, #111 60%, #050505 100%)',    solid: '#050505' },
   maroon: { gradient: 'linear-gradient(160deg, #4a1a1a 0%, #2e0d0d 60%, #1a0808 100%)', solid: '#1a0808' },
   mountains: { gradient: 'linear-gradient(160deg, #201a30 0%, #120d20 60%, #0a0512 100%)', solid: '#0f0a15' },

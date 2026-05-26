@@ -32,7 +32,7 @@ interface ControlPanelProps {
 
 const BG_OPTIONS: { key: BgStyle; label: string; from: string; to: string; isPhoto?: boolean }[] = [
   { key: 'green',          label: 'Forest Green',    from: '#1a4a2e', to: '#0a2015' },
-  { key: 'navy',           label: 'Midnight Navy',   from: '#1a2a4a', to: '#0a1020' },
+  { key: 'navy',           label: 'Midnight Navy',   from: '#11306b', to: '#040c1e' },
   { key: 'black',          label: 'Obsidian',        from: '#1e1e1e', to: '#050505' },
   { key: 'maroon',         label: 'Deep Maroon',     from: '#4a1a1a', to: '#1a0808' },
   { key: 'mountains',      label: 'Misty Mountains', from: '#201a30', to: '#0f0a15' },
