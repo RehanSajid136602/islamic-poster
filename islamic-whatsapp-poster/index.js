@@ -38,6 +38,7 @@ const { execSync } = require('child_process');
 
 // ── Environment variables ─────────────────────────────────────
 const HADITH_API_KEY = process.env.HADITH_API_KEY || '';
+const BOT_API_KEY    = process.env.BOT_API_KEY    || '';
 const CITY           = process.env.CITY           || 'Rawalpindi';
 const COUNTRY        = process.env.COUNTRY        || 'Pakistan';
 const PRAYER_METHOD  = process.env.PRAYER_METHOD  || '1';
@@ -212,16 +213,52 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-app.get('/api/status', (req, res) => {
+// Auth middleware (checks BOT_API_KEY if defined in .env)
+function checkAuth(req, res, next) {
+  if (!BOT_API_KEY) {
+    return next();
+  }
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : (req.headers['x-api-key'] || '');
+  if (token !== BOT_API_KEY) {
+    log('AUTH_ERR', 'Unauthorized access attempt to API');
+    return res.status(401).json({ error: 'Unauthorized: Invalid BOT_API_KEY' });
+  }
+  next();
+}
+
+// Simple HTML/script tag sanitizer
+function sanitizeInput(str) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/<[^>]*>/g, '').trim();
+}
+
+app.get('/api/status', checkAuth, (req, res) => {
   res.json({ state: botState, qr: currentQr });
 });
 
-app.post('/api/upload', async (req, res) => {
+app.post('/api/upload', checkAuth, async (req, res) => {
   if (botState !== 'ready') return res.status(400).json({ error: 'WhatsApp bot is not ready' });
-  const { type, arabic, urdu, reference, bgStyle } = req.body;
+  
+  let { type, arabic, urdu, reference, bgStyle } = req.body;
+
+  // Type-safety & validations
+  if (typeof type !== 'string' || (type !== 'quran' && type !== 'hadith')) {
+    type = 'quran';
+  }
+
+  const validBgStyles = ['green', 'navy', 'black', 'maroon', 'mountains', 'lake', 'mountain-night', 'desert-sunset', 'forest-mist', 'starry-night'];
+  if (typeof bgStyle !== 'string' || !validBgStyles.includes(bgStyle)) {
+    bgStyle = 'lake'; // safe fallback
+  }
+
+  // Sanitization
+  arabic = sanitizeInput(arabic);
+  urdu = sanitizeInput(urdu);
+  reference = sanitizeInput(reference);
 
   if (!arabic || !reference) {
-    return res.status(400).json({ error: 'Missing required fields (arabic, reference)' });
+    return res.status(400).json({ error: 'Missing or invalid required fields (arabic, reference)' });
   }
 
   log('API_UPLOAD', `Manual upload requested: ${reference}`);
@@ -231,11 +268,11 @@ app.post('/api/upload', async (req, res) => {
     // Use the MP4 video trick — WhatsApp's video compression preserves
     // sharp text far better than its JPEG image pipeline.
     tempPath = await generatePosterVideo({
-      type: type || 'quran',
+      type,
       arabic,
-      urdu: urdu || '',
+      urdu,
       reference,
-      bgStyle: bgStyle || 'lake'
+      bgStyle
     });
 
     const media = MessageMedia.fromFilePath(tempPath);
@@ -252,7 +289,7 @@ app.post('/api/upload', async (req, res) => {
       restartClient().catch(() => {});
       res.status(500).json({ error: 'WhatsApp bot frame detached. Re-initializing the bot. Please try again in 15-20 seconds.' });
     } else {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: 'Internal server error while processing upload.' });
     }
   } finally {
     if (tempPath && fs.existsSync(tempPath)) {
@@ -265,7 +302,7 @@ app.post('/api/upload', async (req, res) => {
 let cronEnabled = true;
 let dailyRefreshJob = null;
 
-app.get('/api/control', (req, res) => {
+app.get('/api/control', checkAuth, (req, res) => {
   res.json({
     state: botState,
     cronEnabled,
@@ -276,7 +313,7 @@ app.get('/api/control', (req, res) => {
   });
 });
 
-app.post('/api/control', async (req, res) => {
+app.post('/api/control', checkAuth, async (req, res) => {
   const { action } = req.body;
   log('API_CONTROL', `Control action received: ${action}`);
 
@@ -318,12 +355,12 @@ app.post('/api/control', async (req, res) => {
     }
   } catch (err) {
     log('ERROR', `Control action failed: ${err.message}`);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error while executing control action.' });
   }
 });
 
-app.listen(3001, () => {
-  log('API_SERVER', 'Express API server listening on port 3001');
+app.listen(3001, '127.0.0.1', () => {
+  log('API_SERVER', 'Express API server listening on 127.0.0.1:3001');
 });
 
 // ── API: Al-Quran Cloud — fetch a random Uthmani Ayah and Urdu Translation ──

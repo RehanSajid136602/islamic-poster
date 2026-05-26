@@ -5,6 +5,7 @@ const { execSync } = require('child_process');
 const axios = require('axios');
 
 const HADITH_API_KEY = process.env.HADITH_API_KEY || '';
+const BOT_API_KEY    = process.env.BOT_API_KEY    || '';
 
 async function triggerAsr() {
   console.log('Fetching random Hadith...');
@@ -65,8 +66,12 @@ async function triggerAsr() {
   };
 
   console.log(`Triggering upload with background: ${randomBg}...`);
+  const headers = {};
+  if (BOT_API_KEY) {
+    headers['Authorization'] = `Bearer ${BOT_API_KEY}`;
+  }
   try {
-    const res = await axios.post('http://localhost:3001/api/upload', payload);
+    const res = await axios.post('http://127.0.0.1:3001/api/upload', payload, { headers });
     console.log('Upload result:', res.data);
   } catch (err) {
     console.error('Upload failed:', err.response?.data || err.message);

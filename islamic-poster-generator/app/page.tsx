@@ -9,6 +9,8 @@ import { fetchRandomAyah, fetchSurahAyahs, fetchSurahList, searchQuranAyah } fro
 import { fetchRandomHadith, BOOKS, type BookSlug } from '@/lib/hadith';
 import type { ContentType, BgStyle, PosterData, SurahListItem } from '@/lib/types';
 
+const BOT_API_KEY = process.env.NEXT_PUBLIC_BOT_API_KEY || '';
+
 export default function HomePage() {
   const posterRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -310,7 +312,13 @@ export default function HomePage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+      const headers: Record<string, string> = {};
+      if (BOT_API_KEY) {
+        headers['Authorization'] = `Bearer ${BOT_API_KEY}`;
+      }
+
       const statusRes = await fetch('http://127.0.0.1:3001/api/status', {
+        headers,
         signal: controller.signal
       });
       const statusData = await statusRes.json();
@@ -330,9 +338,14 @@ export default function HomePage() {
 
       showToast('Generating poster via bot (5-10 sec)...');
 
+      const uploadHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (BOT_API_KEY) {
+        uploadHeaders['Authorization'] = `Bearer ${BOT_API_KEY}`;
+      }
+
       const uploadRes = await fetch('http://127.0.0.1:3001/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: uploadHeaders,
         body: JSON.stringify({
           type: poster.type,
           arabic: poster.arabic,
