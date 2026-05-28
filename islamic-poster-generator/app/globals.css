@@ -6,11 +6,19 @@
   font-display: swap;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@font-face {
+  font-family: 'KFGQPCHafs';
+  src: url('/fonts/KFGQPCHafs.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F,
+                 U+FB50-FDFF, U+FE70-FEFF;
+}
 
 /* Ensure proper Arabic letter connectivity features globally */
 #poster-card p[dir="rtl"],
-#poster-card [style*="Amiri Quran"],
+#poster-card [style*="KFGQPCHafs"],
 #poster-card [style*="Amiri"] {
   font-feature-settings: "liga" 1, "calt" 1, "rlig" 1, "kern" 1;
   text-rendering: optimizeLegibility;
@@ -78,16 +86,22 @@ body {
 
 .poster-arabic {
   font-family: 'KFGQPCHafs', serif;
-  font-size: 46px;
+  font-size: 32px;
   font-weight: normal;
   color: #f5e6c0;
   direction: rtl;
+  unicode-bidi: embed;
   text-align: center;
-  line-height: 2.0;
-  letter-spacing: 0.02em;
+  line-height: 2.6;
   position: relative;
   z-index: 1;
-  max-width: 900px;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0 12px;
+  word-break: break-word;
+  font-feature-settings: "liga" 1, "calt" 1, "rlig" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 .poster-urdu {

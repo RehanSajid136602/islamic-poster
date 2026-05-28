@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Download, RefreshCw, Share2, BookOpen, AlignRight, Search, Send, Loader2 } from 'lucide-react';
 import type { ContentType, BgStyle, SurahListItem } from '@/lib/types';
 import { BOOKS, BOOK_LABELS, type BookSlug } from '@/lib/hadith';
+import AudioPlayer from '@/components/AudioPlayer';
+import type { AudioPlayerHandle } from '@/components/AudioPlayer';
 
 // ── Props ─────────────────────────────────────────────────────
 interface ControlPanelProps {
@@ -17,6 +19,9 @@ interface ControlPanelProps {
   isSharing: boolean;
   isUploading: boolean;
   uploadError: string | null;
+  currentSurahNumber: number;
+  currentAyahNumber: number;
+  audioPlayerRef: React.Ref<AudioPlayerHandle>;
   onTypeChange: (t: ContentType) => void;
   onBgChange: (b: BgStyle) => void;
   onSurahChange: (s: number | 'random') => void;
@@ -46,6 +51,7 @@ const BG_OPTIONS: { key: BgStyle; label: string; from: string; to: string; isPho
 export default function ControlPanel({
   contentType, bgStyle, selectedSurah, selectedBook, surahs,
   loading, isSearching, isDownloading, isSharing, isUploading, uploadError,
+  currentSurahNumber, currentAyahNumber, audioPlayerRef,
   onTypeChange, onBgChange, onSurahChange, onBookChange,
   onGenerate, onDownload, onShare, onSearch, onWhatsAppUpload, onDismissUploadError, toast,
 }: ControlPanelProps) {
@@ -268,6 +274,15 @@ export default function ControlPanel({
           <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           {loading ? 'Generating…' : 'Generate Random Poster'}
         </button>
+
+        {/* Audio Player — only for Quran ayahs */}
+        {contentType === 'quran' && currentSurahNumber > 0 && currentAyahNumber > 0 && (
+          <AudioPlayer
+            ref={audioPlayerRef}
+            surahNumber={currentSurahNumber}
+            ayahNumber={currentAyahNumber}
+          />
+        )}
 
         {/* Download */}
         <button

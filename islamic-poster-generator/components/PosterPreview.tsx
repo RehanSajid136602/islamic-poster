@@ -305,10 +305,6 @@ function PosterContent({ data }: { data: PosterData | null }) {
     bgStyle: 'green' as const,
   };
 
-  const arabicLen = d.arabic?.length || 0;
-  const arabicFontSize = arabicLen > 300 ? '16px' : arabicLen > 200 ? '18px' : arabicLen > 100 ? '20px' : '24px';
-  const arabicLineHeight = arabicLen > 200 ? '1.8' : '2.4';
-
   const urduLen = d.urdu?.length || 0;
   const urduFontSize = urduLen > 300 ? '13px' : urduLen > 200 ? '14px' : urduLen > 100 ? '16px' : '18px';
   const urduLineHeight = urduLen > 200 ? '1.8' : '2.4';
@@ -344,28 +340,25 @@ function PosterContent({ data }: { data: PosterData | null }) {
         }}
       />
 
-      {/* Arabic text — Amiri Quran with Amiri fallback */}
+      {/* Arabic text — KFGQPC Uthmanic Script HAFS */}
       <p
         className="poster-arabic"
         style={{
-          fontFamily: "'Amiri Quran', 'Amiri', serif",
-          fontSize: arabicFontSize,
+          fontFamily: "'KFGQPCHafs', serif",
+          fontSize: '32px',
           direction: 'rtl',
           unicodeBidi: 'embed',
-          lineHeight: arabicLineHeight,
+          lineHeight: '2.6',
           textAlign: 'center',
           color: '#f5e6c0',
           width: '100%',
           maxWidth: '460px',
-          wordBreak: 'break-word',
-          overflowWrap: 'break-word',
           margin: '0 auto',
-          padding: '0 10px',
-          zIndex: 1,
-          fontFeatureSettings: '"liga" 1, "calt" 1, "rlig" 1',
+          padding: '0 12px',
+          wordBreak: 'break-word',
+          fontFeatureSettings: '"liga" 1, "calt" 1, "rlig" 1, "kern" 1',
           textRendering: 'optimizeLegibility',
           WebkitFontSmoothing: 'antialiased',
-          MozOsxFontSmoothing: 'grayscale',
         }}
       >
         {d.arabic}

@@ -4,6 +4,8 @@ import Header from '@/components/Header';
 import PosterPreview from '@/components/PosterPreview';
 import ControlPanel from '@/components/ControlPanel';
 import BotStatusPanel from '@/components/BotStatusPanel';
+import VideoGenerator from '@/components/VideoGenerator';
+import type { AudioPlayerHandle } from '@/components/AudioPlayer';
 import { QRCodeCanvas } from 'qrcode.react';
 import { fetchRandomAyah, fetchSurahAyahs, fetchSurahList, searchQuranAyah } from '@/lib/quran';
 import { fetchRandomHadith, BOOKS, type BookSlug } from '@/lib/hadith';
@@ -15,6 +17,7 @@ export default function HomePage() {
   const posterRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const scaleWrapperRef = useRef<HTMLDivElement>(null);
+  const audioPlayerRef = useRef<AudioPlayerHandle>(null);
 
   const [contentType, setContentType] = useState<ContentType>('quran');
   const [bgStyle, setBgStyle] = useState<BgStyle>('green');
@@ -29,6 +32,12 @@ export default function HomePage() {
   const [isSharing, setIsSharing] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [currentSurahNumber, setCurrentSurahNumber] = useState(0);
+  const [currentAyahNumber, setCurrentAyahNumber] = useState(0);
+  const [currentSurahName, setCurrentSurahName] = useState('');
+  const [currentArabicText, setCurrentArabicText] = useState('');
+  const [currentUrduText, setCurrentUrduText] = useState('');
+  const [activeTab, setActiveTab] = useState<'poster' | 'video'>('poster');
   
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
@@ -71,7 +80,7 @@ export default function HomePage() {
     const preloadFonts = async () => {
       try {
         await Promise.all([
-          document.fonts.load('16px "Amiri Quran"'),
+          document.fonts.load('normal 32px KFGQPCHafs'),
           document.fonts.load('16px JameelNoori'),
         ]);
         await document.fonts.ready;
@@ -126,6 +135,7 @@ export default function HomePage() {
 
   // ── Generate poster ───────────────────────────────────────────
   const handleGenerate = useCallback(async () => {
+    audioPlayerRef.current?.stop();
     setLoading(true);
     try {
       if (contentType === 'quran') {
@@ -133,12 +143,22 @@ export default function HomePage() {
           ? await fetchRandomAyah()
           : await fetchSurahAyahs(selectedSurah);
         setPoster(buildQuranPoster(data, bgStyle));
+        setCurrentSurahNumber(data.surahNumber);
+        setCurrentAyahNumber(data.ayahNumber);
+        setCurrentSurahName(data.surahArabic);
+        setCurrentArabicText(data.arabic);
+        setCurrentUrduText(data.urdu);
       } else {
         const book = selectedBook === 'random'
           ? BOOKS[Math.floor(Math.random() * BOOKS.length)]
           : selectedBook;
         const data = await fetchRandomHadith(book);
         setPoster(buildHadithPoster(data, bgStyle));
+        setCurrentSurahNumber(0);
+        setCurrentAyahNumber(0);
+        setCurrentSurahName('');
+        setCurrentArabicText(data.arabic);
+        setCurrentUrduText(data.urdu);
       }
     } catch {
       showToast('Failed to fetch content. Showing fallback.');
@@ -172,7 +192,7 @@ export default function HomePage() {
 
       if (typeof document !== 'undefined' && document.fonts) {
         await Promise.allSettled([
-          document.fonts.load('normal 24px "Amiri Quran"'),
+          document.fonts.load('normal 32px KFGQPCHafs'),
           document.fonts.load('normal 18px JameelNoori'),
           document.fonts.load('normal 18px Amiri'),
         ]);
@@ -195,7 +215,20 @@ export default function HomePage() {
           transformOrigin: 'top left',
         },
         fontEmbedCSS: `
-          @import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+          @font-face {
+            font-family: 'KFGQPCHafs';
+            src: url('/fonts/KFGQPCHafs.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF;
+          }
+          @font-face {
+            font-family: 'JameelNoori';
+            src: url('/fonts/JameelNooriNastaleeq.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+          }
+          @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
         `,
       });
 
@@ -292,6 +325,11 @@ export default function HomePage() {
       const data = await searchQuranAyah(keyword);
       if (data) {
         setPoster(buildQuranPoster(data, bgStyle));
+        setCurrentSurahNumber(data.surahNumber);
+        setCurrentAyahNumber(data.ayahNumber);
+        setCurrentSurahName(data.surahArabic);
+        setCurrentArabicText(data.arabic);
+        setCurrentUrduText(data.urdu);
         showToast('🔍 Found ayah for: ' + keyword);
       } else {
         showToast('⚠️ No Quran results found for: ' + keyword);
@@ -441,30 +479,96 @@ export default function HomePage() {
               <span className="inline-block w-2 h-2 rounded-full" style={{ background: '#d4af37' }} />
               Controls
             </p>
-            <ControlPanel
-              contentType={contentType}
-              bgStyle={bgStyle}
-              selectedSurah={selectedSurah}
-              selectedBook={selectedBook}
-              surahs={surahs}
-              loading={loading}
-              isSearching={isSearching}
-              isDownloading={isDownloading}
-              isSharing={isSharing}
-              isUploading={isUploading}
-              uploadError={uploadError}
-              onTypeChange={setContentType}
-              onBgChange={setBgStyle}
-              onSurahChange={setSelectedSurah}
-              onBookChange={setSelectedBook}
-              onGenerate={handleGenerate}
-              onDownload={handleDownload}
-              onShare={handleShare}
-              onSearch={handleSearch}
-              onWhatsAppUpload={handleWhatsAppUpload}
-              onDismissUploadError={() => setUploadError(null)}
-              toast={toast}
-            />
+
+            {/* Poster / Video tab toggle */}
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-gray-100">
+              <button
+                onClick={() => setActiveTab('poster')}
+                className={`py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  activeTab === 'poster'
+                    ? 'text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+                style={activeTab === 'poster' ? { background: '#1a4a2e' } : {}}
+              >
+                🖼️ Poster
+              </button>
+              <button
+                onClick={() => setActiveTab('video')}
+                className={`py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  activeTab === 'video'
+                    ? 'text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+                style={activeTab === 'video' ? { background: '#1a4a2e' } : {}}
+              >
+                🎬 Video
+              </button>
+            </div>
+
+            {activeTab === 'poster' ? (
+              <ControlPanel
+                contentType={contentType}
+                bgStyle={bgStyle}
+                selectedSurah={selectedSurah}
+                selectedBook={selectedBook}
+                surahs={surahs}
+                loading={loading}
+                isSearching={isSearching}
+                isDownloading={isDownloading}
+                isSharing={isSharing}
+                isUploading={isUploading}
+                uploadError={uploadError}
+                currentSurahNumber={currentSurahNumber}
+                currentAyahNumber={currentAyahNumber}
+                audioPlayerRef={audioPlayerRef}
+                onTypeChange={(t) => {
+                  audioPlayerRef.current?.stop();
+                  setContentType(t);
+                }}
+                onBgChange={setBgStyle}
+                onSurahChange={setSelectedSurah}
+                onBookChange={setSelectedBook}
+                onGenerate={handleGenerate}
+                onDownload={handleDownload}
+                onShare={handleShare}
+                onSearch={handleSearch}
+                onWhatsAppUpload={handleWhatsAppUpload}
+                onDismissUploadError={() => setUploadError(null)}
+                toast={toast}
+              />
+            ) : (
+              <div className="bg-white rounded-2xl shadow-xl border border-green-100 overflow-hidden">
+                <div
+                  className="px-6 py-4"
+                  style={{ background: 'linear-gradient(90deg, #1a4a2e, #245c38)' }}
+                >
+                  <h2 className="text-white font-semibold text-lg flex items-center gap-2">
+                    🎬 Video Generator
+                  </h2>
+                  <p className="text-green-200 text-sm mt-0.5">Create vertical videos with recitation</p>
+                </div>
+                <div className="p-6">
+                  <VideoGenerator
+                    arabicText={currentArabicText}
+                    urduText={currentUrduText}
+                    surahNumber={currentSurahNumber}
+                    ayahNumber={currentAyahNumber}
+                    surahName={currentSurahName}
+                    contentType={contentType}
+                    onContentUpdate={(data) => {
+                      setCurrentArabicText(data.arabicText)
+                      setCurrentUrduText(data.urduText)
+                      setCurrentSurahNumber(data.surahNumber)
+                      setCurrentAyahNumber(data.ayahNumber)
+                      setCurrentSurahName(data.surahName)
+                      setContentType(data.contentType)
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
             <BotStatusPanel />
           </div>
         </div>
